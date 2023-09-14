@@ -1,25 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+import React, {useEffect, useState} from 'react';
+import {Routes, Route, useNavigate, Navigate, BrowserRouter} from 'react-router-dom';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+import Home from './container/Home';
+import Login from "./components/Login";
+import {createClient} from "@supabase/supabase-js";
+import {supabase} from "./supabaseClient";
+import { AuthProvider } from './hooks/Auth';
+import ProtectedRoute from "./components/ProtectedRoute";
 
-export default App;
+
+const App = () => {
+    const navigate = useNavigate();
+
+    const [session, setSession] = useState(null)
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setSession(session)
+        })
+
+        supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session)
+        })
+    }, [])
+
+
+    return (
+        <AuthProvider>
+            <Routes>
+                <Route
+                    path="/"
+                    element={
+                        <ProtectedRoute>
+                            <Home />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route path="/login" element={<Login />} />
+            </Routes>
+        </AuthProvider>
+    );
+};
+
+export default App
